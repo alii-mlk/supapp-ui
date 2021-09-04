@@ -18,21 +18,20 @@ import { CurrentUserContext } from '../contexts/CurrentUserContext';
 // import PostSingle from './screens/PostSingle';
 const Stack = createStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
-function getHeaderTitle(route) {
-    // If the focused route is not found, we need to assume it's the initial screen
-    // This can happen during if there hasn't been any navigation inside the screen
-    // In our case, it's "Map" as that's the first screen inside the tab navigator
-    // const routeName = getFocusedRouteNameFromRoute(route) ?? 'Map';
-    // switch (routeName) {
-    //     case 'Feed':
-    //         return 'News feed';
-    //     case 'Profile':
-    //         return 'Profile';
-    //     case 'Activities':
-    //         return 'Activities';
-    // }
-
-}
+// function getHeaderTitle(route) {
+// If the focused route is not found, we need to assume it's the initial screen
+// This can happen during if there hasn't been any navigation inside the screen
+// In our case, it's "Map" as that's the first screen inside the tab navigator
+// const routeName = getFocusedRouteNameFromRoute(route) ?? 'Map';
+// switch (routeName) {
+//     case 'Feed':
+//         return 'News feed';
+//     case 'Profile':
+//         return 'Profile';
+//     case 'Activities':
+//         return 'Activities';
+// }
+// }
 
 const ScreenRouter = () => {
     const [isLoading, setIsLoading] = useState(true);

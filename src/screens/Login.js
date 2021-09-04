@@ -10,13 +10,15 @@ import {
     Text,
     SafeAreaView,
     KeyboardAvoidingView,
-    ActivityIndicator
+    ActivityIndicator,
+    ImageBackground
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import FlatButton from '../shared/Button';
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
-
+import MyAppHeader from '../shared/MyAppText';
+import { grey } from 'chalk';
 
 export default function Login({ navigation }) {
     const [newUser, setNewUser] = useState({
@@ -72,20 +74,89 @@ export default function Login({ navigation }) {
             behavior={Platform.OS === "ios" ? "padding" : null}
             style={{ flex: 1 }}
         >
-            <SafeAreaView style={styles.container}>
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View>
-                        <Image source={require('../assets/images/login.jpg')} />
-
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <ImageBackground source={require('../assets/images/login.jpg')} resizeMode="cover" style={styles.image}>
+                    <View style={styles.inner}>
+                        <MyAppHeader isTitle={true} bold={true} style={styles.header}>Login</MyAppHeader>
+                        <View style={styles.inputSection}>
+                            <Icon style={styles.searchIcon} name="user" size={20} color="#000" />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="User Nickname"
+                                value={newUser.username}
+                                onChangeText={onUserNameChange}
+                            />
+                        </View>
+                        <View style={styles.inputSection}>
+                            <Icon style={styles.searchIcon} name="lock" size={20} color="#000" />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="User password"
+                                underlineColorAndroid="transparent"
+                                value={newUser.password}
+                                onChangeText={onPassChange}
+                                secureTextEntry={true}
+                            />
+                        </View>
+                        {error ? <Text style={{ color: 'red', }}>{error}</Text> : undefined}
+                        <FlatButton text='Login' onPressHandler={onSubmitHandler} />
+                        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                            <Text>Don have account? Signup!</Text>
+                        </TouchableOpacity>
                     </View>
-                </TouchableWithoutFeedback>
-            </SafeAreaView  >
+                </ImageBackground>
+            </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    image: {
         flex: 1,
+        justifyContent: "center"
     },
-})
+    header: {
+        flex: 1,
+        textAlign: 'center',
+        paddingTop: 50,
+        fontSize: 30
+    },
+    inner: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: 'center',
+        marginTop: -30,
+        backgroundColor: 'rgba(240, 239, 239, 0.7)'
+    },
+    inputSection: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 6,
+        marginVertical: 10,
+        width: '80%'
+    },
+    searchIcon: {
+        padding: 10,
+    },
+    input: {
+        flex: 1,
+        color: '#424242',
+        fontSize: 18,
+    },
+    circularProgressContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+});
+// login:
+
+
+// signup:
+// user name
+// email pass
+// phone 
+// device id
