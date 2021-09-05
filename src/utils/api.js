@@ -22,7 +22,7 @@ class APIHandler {
         if (isPost)
             options.body = JSON.stringify(data);
         return makeCancelable(new Promise((resolve, reject) => {
-            var url = ('http://192.168.1.114:8080/nazin/shop/') + path;
+            var url = ('http://192.168.1.140:7366/supapp/api/') + path;
             console.log(url);
             fetch(url, options).then((response) => {
                 setTimeout(() => {

@@ -16,23 +16,25 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import FlatButton from '../shared/Button';
-import { CurrentUserContext } from '../contexts/CurrentUserContext'
-import MyAppHeader from '../shared/MyAppText';
-import { grey } from 'chalk';
+import API from '../utils/api';
+import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import MyAppHeader from '../shared/MyAppText'
+
 
 export default function Login({ navigation }) {
     const [newUser, setNewUser] = useState({
-        username: '',
+        username_or_email: '',
         password: '',
 
     })
     const { loginHandler } = useContext(CurrentUserContext);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const apiCall = useRef(undefined);
 
     const onUserNameChange = (value) => {
         var u = { ...newUser };
-        u.username = value;
+        u.username_or_email = value;
         setNewUser(u);
     }
     const onPassChange = (value) => {
@@ -40,12 +42,19 @@ export default function Login({ navigation }) {
         u.password = value;
         setNewUser(u);
     }
+    useEffect(() => {
+        return () => {
+            if (apiCall.current !== undefined)
+                apiCall.current.cancel();
+        }
+    }, []);
+
 
     //setting user token in local storage
     const storeData = async (value) => {
         try {
             let localStorageItems = {
-                username: newUser.username,
+                username: newUser.username_or_email,
                 token: value
             }
             await AsyncStorage.setItem('user', JSON.stringify(localStorageItems));
@@ -56,11 +65,15 @@ export default function Login({ navigation }) {
     }
     const onSubmitHandler = async () => {
         Keyboard.dismiss();
-        if (newUser.username.length === 0 || newUser.password.length === 0) {
-            alert('username and password cant be empty!');
+        if (newUser.username_or_email.length === 0) {
+            alert('username or email cant be empty!');
             return;
         }
-        if (newUser.username.length < 3) {
+        if (newUser.password.length === 0) {
+            alert('Password cant be empty!');
+            return;
+        }
+        if (newUser.username_or_email.length < 3) {
             alert('username must be at least 3 characters!');
             return false;
         }
@@ -68,65 +81,92 @@ export default function Login({ navigation }) {
             alert('password must be at least 3 characters!');
             return;
         }
+        try {
+            apiCall.current = API.request('/auth/login', true, {
+                username_or_email: newUser.username_or_email,
+                password: newUser.password
+            });
+            const res = await apiCall.current.promise
+            let data = await res.json();
+            console.log(data);
+            if (data.message === "User not found, please signup") {
+                setError("User not found, please signup")
+            }
+            if (data.message == "Login successfully") {
+                await storeData(data.token);
+                loginHandler(data.token, newUser.username_or_email);
+                navigation.navigate('HomePage')
+            }
+            else {
+                setError('Error acurred');
+            }
+        }
+        catch (err) {
+            console.log(err);
+            setError(true);
+        }
     }
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : null}
             style={{ flex: 1 }}
         >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <ImageBackground source={require('../assets/images/login.jpg')} resizeMode="cover" style={styles.image}>
+            <SafeAreaView style={styles.container}>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={styles.inner}>
-                        <MyAppHeader isTitle={true} bold={true} style={styles.header}>Login</MyAppHeader>
-                        <View style={styles.inputSection}>
-                            <Icon style={styles.searchIcon} name="user" size={20} color="#000" />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="User Nickname"
-                                value={newUser.username}
-                                onChangeText={onUserNameChange}
-                            />
+                        <MyAppHeader bold={true} isTitle={true} style={{ textAlign: 'center', paddingTop: 20, fontSize: 30 }}>Login</MyAppHeader>
+                        <Image source={require('../assets/images/login.png')} style={styles.image} />
+                        <View style={styles.inputsWrapper}>
+                            <View style={styles.inputSection}>
+                                <Icon style={styles.searchIcon} name="user" size={20} color="#000" />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Username or email"
+                                    underlineColorAndroid="transparent"
+                                    value={newUser.username}
+                                    onChangeText={onUserNameChange}
+                                />
+                            </View>
+
+                            <View style={styles.inputSection}>
+                                <Icon style={styles.searchIcon} name="lock" size={20} color="#000" />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Password"
+                                    underlineColorAndroid="transparent"
+                                    value={newUser.password}
+                                    onChangeText={onPassChange}
+                                    secureTextEntry={true}
+                                />
+                            </View>
+                            {error ? <MyAppHeader style={{ color: 'red', textAlign: 'center' }}>{error}</MyAppHeader> : undefined}
+                            <FlatButton text={'login'} buttonColor={'purple'} onPressHandler={onSubmitHandler} />
+                            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                                <MyAppHeader style={{ textAlign: 'center', color: 'blue' }}>Don have account? Signup!</MyAppHeader>
+                            </TouchableOpacity>
                         </View>
-                        <View style={styles.inputSection}>
-                            <Icon style={styles.searchIcon} name="lock" size={20} color="#000" />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="User password"
-                                underlineColorAndroid="transparent"
-                                value={newUser.password}
-                                onChangeText={onPassChange}
-                                secureTextEntry={true}
-                            />
-                        </View>
-                        {error ? <Text style={{ color: 'red', }}>{error}</Text> : undefined}
-                        <FlatButton text='Login' onPressHandler={onSubmitHandler} />
-                        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                            <Text>Don have account? Signup!</Text>
-                        </TouchableOpacity>
                     </View>
-                </ImageBackground>
-            </TouchableWithoutFeedback>
+                </TouchableWithoutFeedback>
+            </SafeAreaView  >
         </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    image: {
+    container: {
         flex: 1,
-        justifyContent: "center"
-    },
-    header: {
-        flex: 1,
-        textAlign: 'center',
-        paddingTop: 50,
-        fontSize: 30
     },
     inner: {
         flex: 1,
         justifyContent: "center",
         alignItems: 'center',
-        marginTop: -30,
-        backgroundColor: 'rgba(240, 239, 239, 0.7)'
+    },
+    image: {
+        flex: 1,
+        resizeMode: 'contain',
+    },
+    inputsWrapper: {
+        flex: 1
     },
     inputSection: {
         flexDirection: 'row',
@@ -151,12 +191,4 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center"
     },
-});
-// login:
-
-
-// signup:
-// user name
-// email pass
-// phone 
-// device id
+})

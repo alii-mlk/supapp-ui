@@ -8,35 +8,67 @@ import Profile from '../screens/Profile';
 import Welcome from '../screens/Welcome';
 // import LoadingView from './LoadingView'
 import API from '../utils/api';
-
+import HomePage from '../screens/HomePage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
-
-
-// import PostSingle from './screens/PostSingle';
 const Stack = createStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
-// function getHeaderTitle(route) {
-// If the focused route is not found, we need to assume it's the initial screen
-// This can happen during if there hasn't been any navigation inside the screen
-// In our case, it's "Map" as that's the first screen inside the tab navigator
-// const routeName = getFocusedRouteNameFromRoute(route) ?? 'Map';
-// switch (routeName) {
-//     case 'Feed':
-//         return 'News feed';
-//     case 'Profile':
-//         return 'Profile';
-//     case 'Activities':
-//         return 'Activities';
-// }
-// }
+function getHeaderTitle(route) {
+    // If the focused route is not found, we need to assume it's the initial screen
+    // This can happen during if there hasn't been any navigation inside the screen
+    // In our case, it's "Map" as that's the first screen inside the tab navigator
+    const routeName = getFocusedRouteNameFromRoute(route) ?? 'Map';
+    switch (routeName) {
+        case 'Feed':
+            return 'News feed';
+        case 'Profile':
+            return 'Profile';
+        case 'Activities':
+            return 'Activities';
+    }
+}
 
 const ScreenRouter = () => {
     const [isLoading, setIsLoading] = useState(true);
     const { user, loginHandler } = useContext(CurrentUserContext);
-
+    const { location, updateLocation } = useContext(LocationContext);
+    const apiCall = useRef(undefined);
+    const [getPositionSuccess, setGetPositionSuccess] = useState(false);
+    const checkToken = async () => {
+        let token = undefined;
+        let recievedUsername = undefined;
+        let localStorageItem = await getData();
+        localStorageItem = await JSON.parse(localStorageItem)
+        if (localStorageItem !== null && localStorageItem !== undefined) {
+            token = localStorageItem.token;
+            recievedUsername = localStorageItem.username;
+        }
+        else {
+            token = undefined;
+            setIsLoading(false);
+        }
+        if (token !== undefined) {
+            try {
+                apiCall.current = API.request('/check-token', true, {
+                    token: localStorageItem.token,
+                });
+                const res = await apiCall.current.promise
+                const data = await res.json();
+                if (data === 'user found') {
+                    loginHandler(token, recievedUsername);
+                    setIsLoading(false)
+                }
+            }
+            catch (err) {
+                console.log('in catch')
+                console.log(err);
+            }
+        }
+        // else {
+        //     setLoadingUserToken(false);
+        // }
+    }
     //reading user credentials from local storage
     const getData = async () => {
         try {
@@ -48,9 +80,39 @@ const ScreenRouter = () => {
         }
     }
 
+
+    const getuserLocation = () => {
+        Geolocation.getCurrentPosition(
+            (position) => {
+                updateLocation(position);
+                setGetPositionSuccess(true)
+            },
+            (error) => {
+                // See error code charts below.
+                alert(JSON.stringify(error));
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+    }
+    useEffect(() => {
+        getuserLocation();
+        checkToken();
+        return () => {
+            if (apiCall.current !== undefined)
+                apiCall.current.cancel();
+        }
+    }, []);
     function HomeTabs() {
         return (
             <Tab.Navigator>
+                <Tab.Screen name="HomePage" component={HomePage}
+                    options={{
+                        tabBarLabel: 'HomePage',
+                        tabBarIcon: () => (
+                            <Icon name="home" size={20} color="#000" />
+                        ),
+                    }}
+                />
                 <Tab.Screen name="Profile" component={Profile}
                     options={{
                         tabBarLabel: 'profile',
@@ -62,31 +124,31 @@ const ScreenRouter = () => {
             </Tab.Navigator>
         );
     }
-    // if (user.isLoggedIn == true) {
-    //     return (
-    //         <NavigationContainer>
-    //             <Stack.Navigator>
-    //                 <Stack.Screen name="Map" component={HomeTabs} options={({ route }) => ({
-    //                     headerTitle: getHeaderTitle(route),
-    //                 })}
-    //                 />
-    //                 <Stack.Screen name="MapSingle" component={MapSingle} />
-    //             </Stack.Navigator>
-    //         </NavigationContainer>
-    //     )
-    // }
-    // if (user.isLoggedIn == false) {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator>
-                <Stack.Screen name="Welcome" component={Welcome} />
-                <Stack.Screen name="Login" component={Login} />
-                <Stack.Screen name="SignUp" component={SignUp} />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
-    // }
-    // else return null
+    if (user.isLoggedIn == true) {
+        return (
+            <NavigationContainer>
+                <Stack.Navigator>
+                    <Stack.Screen name="Map" component={HomeTabs} options={({ route }) => ({
+                        headerTitle: getHeaderTitle(route),
+                    })}
+                    />
+                    <Stack.Screen name="MapSingle" component={MapSingle} />
+                </Stack.Navigator>
+            </NavigationContainer>
+        )
+    }
+    if (user.isLoggedIn == false) {
+        return (
+            <NavigationContainer>
+                <Stack.Navigator>
+                    <Stack.Screen name="Welcome" component={Welcome} />
+                    <Stack.Screen name="Login" component={Login} />
+                    <Stack.Screen name="SignUp" component={SignUp} />
+                </Stack.Navigator>
+            </NavigationContainer>
+        );
+    }
+    else return null
 }
 
 export default ScreenRouter

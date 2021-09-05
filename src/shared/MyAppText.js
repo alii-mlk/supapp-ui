@@ -2,7 +2,7 @@ import React from 'react'
 import {
     Text,
 } from 'react-native'
-export default function MyAppHeader(props) {
+export default function MyAppText(props) {
     let fontFamily = props.bold ? 'ComicNeue-Bold' : 'ComicNeue-Regular'
     let fontSize = props.isTitle ? 20 : 16
     return (
