@@ -51,11 +51,12 @@ export default function Login({ navigation }) {
 
 
     //setting user token in local storage
-    const storeData = async (value) => {
+    const storeData = async (token, username, id) => {
         try {
             let localStorageItems = {
-                username: newUser.username_or_email,
-                token: value
+                token: token,
+                username: username,
+                id: id
             }
             await AsyncStorage.setItem('user', JSON.stringify(localStorageItems));
             console.log(`items written to local storage in login page ${JSON.stringify(localStorageItems)}`)
@@ -92,13 +93,16 @@ export default function Login({ navigation }) {
             if (data.message === "User not found, please signup") {
                 setError("User not found, please signup")
             }
+            if (data.message === "Wrong username or password, please try again") {
+                setError("Wrong username or password, please try again")
+            }
             if (data.message == "Login successfully") {
-                await storeData(data.token);
-                loginHandler(data.token, newUser.username_or_email);
-                navigation.navigate('HomePage')
+                await storeData(data.data.token, data.data.username, data.data.id);
+                loginHandler(data.data.token, data.data.username, data.data.id);
             }
             else {
                 setError('Error acurred');
+
             }
         }
         catch (err) {

@@ -19,16 +19,17 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from "react-native-vector-icons/FontAwesome";
 import { CurrentUserContext } from '../contexts/CurrentUserContext'
+import API from '../utils/api';
 
 export default function Profile({ navigation }) {
     const [loggedInUser, setLoggedInUser] = useState(undefined);
     const { user, logOutHandler } = useContext(CurrentUserContext);
+    const apiCall = useRef(undefined);
 
     React.useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
             loadUser();
-            console.log('use effect called')
-            setLoadingDone(false)
+            // setLoadingDone(false)
         });
 
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -42,44 +43,35 @@ export default function Profile({ navigation }) {
         }
     }, []);
     const loadUser = async () => {
-        console.log(user.username);
+        console.log(user);
         try {
-            apiCall.current = API.request('/find-user', true, {
-                username: user.username,
-            });
+            apiCall.current = API.request(`/auth/user/get/${user.id}`, false);
             const res = await apiCall.current.promise
             const data = await res.json();
-            console.log(data.username)
-            setLoggedInUser(data);
-            console.log(`user ${loggedInUser}`);
+            console.log(data)
         }
         catch (err) {
             console.log('in loadUser catch')
             console.log(err);
         }
     }
-    const onEditBioChange = (value) => {
-        setEditBio(value)
-    };
-    const handleEditBioSubmit = async () => {
-    }
     //logout is only handling from client side 
-    //we simply remove jwt token from local storage and redirect to login page and on componentDidMount we make api call with undefined token which makes user login fail. EZ right? :D
+    //we simply remove jwt token from local storage and redirect to login page and on componentDidMount we make api call with undefined token which makes user login fail.
+    //  EZ right? :D
     const onLogOutSubmit = async () => {
         removeTokenFromLocalStorage();
-        logOutHandler()
+        // logOutHandler()
     }
-    const removeTokenFromLocalStorage = async () => {
-        try {
-            let localStorageItems = {
-                username: user.username,
-                token: undefined
-            }
-            await AsyncStorage.setItem('user', JSON.stringify(localStorageItems));
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    // const removeTokenFromLocalStorage = async () => {
+    //     try {
+    //         let localStorageItems = {
+    //             token: undefined
+    //         }
+    //         await AsyncStorage.setItem('user', JSON.stringify(localStorageItems));
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+    // }
 
     // if (loadingDone) {
     return (

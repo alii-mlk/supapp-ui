@@ -216,6 +216,7 @@ export default function SignUp({ navigation }) {
                                     underlineColorAndroid="transparent"
                                     value={user.confirmPass}
                                     onChangeText={onConfirmPassChange}
+                                    secureTextEntry={true}
                                 />
                             </View>
                             {error ? <MyAppHeader style={{ color: 'red', }}>{error}</MyAppHeader> : undefined}

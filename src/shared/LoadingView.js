@@ -5,12 +5,12 @@ import {
     Text,
     StyleSheet
 } from 'react-native'
-
+import MyAppText from './MyAppText'
 export default function LoadingView(props) {
     return (
         <View style={styles.container}>
             <ActivityIndicator size="large" color="blue" />
-            <Text style={styles.title}>{props.title}</Text>
+            <MyAppText isTitle={true}>{props.title}</MyAppText>
         </View>
     )
 }
@@ -19,8 +19,5 @@ const styles = StyleSheet.create({
         justifyContent: 'center', //Centered vertically
         alignItems: 'center', // Centered horizontally
         flex: 1
-    },
-    title: {
-        fontSize: 16
     }
 })

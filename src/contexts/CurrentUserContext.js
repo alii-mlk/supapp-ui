@@ -7,7 +7,8 @@ const CurrentUserContextProvider = (props) => {
     const [user, setUser] = useState({
         token: '',
         userName: '',
-        isLoggedIn: false
+        id: '',
+        isLoggedIn: false,
     });
     const logOutHandler = () => {
         console.log('logout handler invoked')
@@ -17,12 +18,13 @@ const CurrentUserContextProvider = (props) => {
             username: ''
         })
     }
-    const loginHandler = (token, username) => {
+    const loginHandler = (token, username, id) => {
         setUser({
             token: token,
             username: username,
-            isLoggedIn: true
-        })
+            isLoggedIn: true,
+            id: id
+        });
     }
     return (
         <CurrentUserContext.Provider value={{ user, logOutHandler, loginHandler }}>
