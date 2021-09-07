@@ -104,8 +104,8 @@ export default function SignUp({ navigation }) {
             alert('Please enter phone correctly!');
             return false;
         }
-        if (user.phone.length < 3) {
-            alert('password must be at least 3 characters!');
+        if (user.phone.length < 13) {
+            alert('phone must be at least 13 characters!');
             return;
         }
         let isMailValid = validateEmail(user.email)

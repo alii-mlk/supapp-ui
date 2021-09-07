@@ -8,12 +8,13 @@ class APIHandler {
         // this.searchBooks = this.searchBooks.bind(this);
     }
 
-    request(path, isPost = false, data = {}) {
+    request(path, isPost = false, data = {}, token) {
         if (path[0] === '/')
             path = path.substring(1);
         var h = {
             Accept: 'application/json',
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
         };
         var options = {
             headers: h,
